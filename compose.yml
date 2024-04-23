@@ -1,15 +1,15 @@
 x-logging: &logging
-  driver: "json-file"
+  driver: 'json-file'
   options:
-    max-size: "10m"
-    max-file: "3"
+    max-size: '10m'
+    max-file: '3'
 
 services:
   postgres:
     image: postgres:${POSTGRES_VERSION}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "keycloak"]
+      test: ['CMD', 'pg_isready', '-U', 'keycloak']
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
@@ -23,14 +23,14 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:${KC_VERSION}
-    command: ["start-dev", "--import-realm"]
+    command: ['start-dev', '--import-realm']
     restart: unless-stopped
     environment:
       KC_DB: postgres
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: password
-      KC_DB_URL: "jdbc:postgresql://postgres:5432/keycloak"
-      KC_METRICS_ENABLED: true
+      KC_DB_URL: 'jdbc:postgresql://postgres:5432/keycloak'
+      KC_METRICS_ENABLED: 'true'
       KC_LOG_LEVEL: ${KC_LOG_LEVEL}
       KC_REALM_NAME: ${KC_REALM_NAME}
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
@@ -42,6 +42,7 @@ services:
       - ${KC_PORT}:8080
     volumes:
       - ./keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro
+      - ./themes/:/opt/keycloak/themes
     logging: *logging
 
   prometheus:
@@ -54,7 +55,14 @@ services:
       - '--web.enable-lifecycle'
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      test:
+        [
+          'CMD',
+          'wget',
+          '--tries=1',
+          '--spider',
+          'http://localhost:9090/-/healthy',
+        ]
     ports:
       - ${PROMETHEUS_PORT}:9090
     volumes:
@@ -67,7 +75,13 @@ services:
     ports:
       - ${GF_SERVER_HTTP_PORT}:${GF_SERVER_HTTP_PORT}
     healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:${GF_SERVER_HTTP_PORT}/api/health"]
+      test:
+        [
+          'CMD',
+          'wget',
+          '--spider',
+          'http://localhost:${GF_SERVER_HTTP_PORT}/api/health',
+        ]
     environment:
       GF_SERVER_HTTP_PORT: ${GF_SERVER_HTTP_PORT}
       GF_LOG_LEVEL: ${GF_LOG_LEVEL}
@@ -77,9 +91,9 @@ services:
       GF_AUTH_GENERIC_OAUTH_ENABLED: true
       GF_AUTH_GENERIC_OAUTH_NAME: Keycloak
       GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP: true
-      GF_AUTH_GENERIC_OAUTH_CLIENT_ID: "grafana"
-      GF_AUTH_GENERIC_OAUTH_EMAIL_ATTRIBUTE_NAME: "email:primary"
-      GF_AUTH_GENERIC_OAUTH_SCOPES: "openid profile email"
+      GF_AUTH_GENERIC_OAUTH_CLIENT_ID: 'grafana'
+      GF_AUTH_GENERIC_OAUTH_EMAIL_ATTRIBUTE_NAME: 'email:primary'
+      GF_AUTH_GENERIC_OAUTH_SCOPES: 'openid profile email'
       GF_AUTH_GENERIC_OAUTH_AUTH_URL: ${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/protocol/openid-connect/auth
       GF_AUTH_GENERIC_OAUTH_TOKEN_URL: http://keycloak:${KC_PORT}/realms/${KC_REALM_NAME}/protocol/openid-connect/token
       GF_AUTH_GENERIC_OAUTH_API_URL: ${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/protocol/openid-connect/userinfo
